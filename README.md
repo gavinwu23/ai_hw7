@@ -1,5 +1,5 @@
 Gavin Wu, gwu23, 6579388770
-AI homework 6
+AI homework 7
 
 I wrote this program in c++ 11. To compile and run this program
 	type make 
@@ -13,38 +13,30 @@ i used a linux enviorment also to compile and run if that makes a difference.
 
 After a few seconds for a working solvable puzzle, it will display 
 
-Number of misplace Tiles
-Moves:
-Number of nodes Expanded:
-Time taken:
-memory used:
-
 Manhattan
 Moves:
 Number of nodes Expanded:
 Time taken:
 memory used:
 
-one uses calculation of a* with misplace tiles, and other with manhatten distance
+Number of misplace Tiles
+Moves:
+Number of nodes Expanded:
+Time taken:
+memory used:
 
-most of the test cases from HW4, give out the same number of nodes expanded EXCEPT for the last one.
-1 3 4 8 5 2 0 6 9 10 7 11 13 14 15 12
-so manhattan distance seems to be better.
+
+I took out the timer for 30 seconds timeout because i wanted to solve the #2 new test case which is alot.
+
+For the new test cases, test case 1 solves in about 3 seconds? but for new test case 2, it takes a LONG time, like about 20 minutes :(.
+The old test cases still works perfectly.
 
 
 Code Explaination:
 
-Inside Puzzle_node.cpp, i made 2 methods. calculate_misplace_tiles and calculate_manhattan_distance.
+I used my IDDFS from homework 5 because IDA* follows the same idea. Instead of checking the depth, i checked the f value, (heruistic value + distance 
+to that node) as the cutoff. I made a global vector called low_values which stores the f values that surpasses the threshold, then i use the std::min to find the min
+value which will be the new threshold and repeated until a solution is found.
 
-For the misplace titles, i compared the entire board(2d array) to the goal state and ignore the 0 spot. For each
-iteration, if the number do not match to the goal state, i kept a book keeping variable to keep track of it.
-Then i used my depth + misplaceVariable to get my final heuristics. 
-
-For manhatten distance, i used the regular distance formula to find the distance. loop through the entire board find the distance for each spot, then
-store the total distance in a variable. Then i used my depth + variable to get my final heuristics.
-
-Depth is the distance from the intitial state to that state we got to, so basically kinda depth.
-
-
-In main, there is a function a_star which does the search algo. I made a vector to hold all my nodes and then sort it everytime, by our final heuristics values.
-I thought this was easier because it is straight forward, and a* looks at the lowest final value and goes from there. base code is similar to hw5,4
+I deleted the time out of 30 seconds because it works fast and i wanted to solve the new test case #2 which it did but it took a long time, about half a million nodes
+generated. geez
