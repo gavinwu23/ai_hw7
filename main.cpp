@@ -110,11 +110,11 @@ Puzzle_node* ID_a_star ( Puzzle_node* initial_state, const std::vector<std::stri
         }
 
         // if it reaches 30 seconds we just stop it
-        auto time_so_far = (double)(clock() - tStart)/CLOCKS_PER_SEC;
-        if (time_so_far > 30) {
-            Puzzle_node *dummy = new Puzzle_node(5);
-            return dummy;
-        }
+        // auto time_so_far = (double)(clock() - tStart)/CLOCKS_PER_SEC;
+        // if (time_so_far > 60) {
+        //     Puzzle_node *dummy = new Puzzle_node(5);
+        //     return dummy;
+        // }
 
         // check if the cutoff for heruistics is over.
         // if it is, we ignore it and then store that heristics value
@@ -203,13 +203,15 @@ int main()
     Puzzle_node *start = new Puzzle_node(starting_state_board);
 
     int start_depth = 0;
-    Puzzle_node *solution = ID_a_star(start,directions,nodes, start_depth, "misplaceTILES"); // run iddfs
+    Puzzle_node *solution = ID_a_star(start,directions,nodes, start_depth, "manhatten"); // run iddfs
+
+    std::cout << "Calculating manhattan distance..." << std::endl;
 
     // continue to loop depth by depth
     while (!solution) {
         auto min_value = *std::min_element(low_values.begin(),low_values.end()); // grab the lowest value that we found
         start_depth = min_value;
-        solution = ID_a_star(start,directions,nodes, start_depth, "misplaceTILES");
+        solution = ID_a_star(start,directions,nodes, start_depth, "manhatten");
     }
 
     std::cout << std::endl << "Number of misplaced tiles" << std::endl;
@@ -226,7 +228,7 @@ int main()
     int mem = RUSAGE_SELF;
     struct rusage resource_usage; // linux get resource usage from man page
     int get_total_mem = getrusage(mem,&resource_usage);
-    std::cout<< "Memory Used: " <<resource_usage.ru_maxrss << "kb" << std::endl; // get the max resident size
+    std::cout<< "Memory Used: " <<resource_usage.ru_maxrss << "kb" << std::endl << std::endl; // get the max resident size
 
 
     //===========================================================
@@ -236,16 +238,18 @@ int main()
 
     //Puzzle_node* manhattan_sol = ID_a_star(start1,directions,nodes_created, "manhatten");
     int start_depth1 = 0;
-    Puzzle_node *manhattan_sol = ID_a_star(start1,directions,nodes_created, start_depth1, "manhatten"); // run iddfs
+    Puzzle_node *manhattan_sol = ID_a_star(start1,directions,nodes_created, start_depth1, "misplaceTILES"); // run iddfs
+
+    std::cout << "Calculating misplace tiles..." << std::endl;
 
     // continue to loop depth by depth
     while (!manhattan_sol) {
         auto min_value1 = *std::min_element(low_values.begin(),low_values.end()); // grab the lowest value that we found
         start_depth1 = min_value1;
-        manhattan_sol = ID_a_star(start1,directions,nodes_created, start_depth1, "manhatten");
+        manhattan_sol = ID_a_star(start1,directions,nodes_created, start_depth1, "misplaceTILES");
     }
 
-    std::cout << std::endl << "Manhattan Distance" << std::endl;
+    std::cout << std::endl << "Number of misplace tiles" << std::endl;
 
     // get all the moves which lead to the solution
     std::cout << "Moves: " <<  manhattan_sol->get_moves() << std::endl;
@@ -259,7 +263,7 @@ int main()
     int mem1 = RUSAGE_SELF;
     struct rusage resource_usage1; // linux get resource usage from man page
     int get_total_mem1 = getrusage(mem1,&resource_usage1);
-    std::cout<< "Memory Used: " <<resource_usage1.ru_maxrss << "kb" << std::endl; // get the max resident size
+    std::cout<< "Memory Used: " <<resource_usage1.ru_maxrss << "kb" << std::endl << std::endl; // get the max resident size
 
     return 0;
 }
