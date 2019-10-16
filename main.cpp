@@ -214,7 +214,7 @@ int main()
         solution = ID_a_star(start,directions,nodes, start_depth, "manhatten");
     }
 
-    std::cout << std::endl << "Number of misplaced tiles" << std::endl;
+    std::cout << std::endl << "Manhattan Distance:" << std::endl;
 
     // get all the moves which lead to the solution
     std::cout << "Moves: " <<  solution->get_moves() << std::endl;

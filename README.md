@@ -28,7 +28,7 @@ memory used:
 
 I took out the timer for 30 seconds timeout because i wanted to solve the #2 new test case which is alot.
 
-For the new test cases, test case 1 solves in about 3 seconds? but for new test case 2, it takes a LONG time, like about 20 minutes :(.
+For the new test cases, test case 1 solves in about 3 seconds? but for new test case 2, it takes a LONG time, like about 20 minutes :(
 The old test cases still works perfectly.
 
 
@@ -39,4 +39,5 @@ to that node) as the cutoff. I made a global vector called low_values which stor
 value which will be the new threshold and repeated until a solution is found.
 
 I deleted the time out of 30 seconds because it works fast and i wanted to solve the new test case #2 which it did but it took a long time, about half a million nodes
-generated. geez
+generated. 
+
