@@ -1,6 +1,6 @@
 /*
 Gavin Wu 15 puzzle program
-CS 411 homework 6 A*
+CS 411 homework 7 idda*
 -number of misplace tiles
 - manhatten distance
 
@@ -22,10 +22,8 @@ CS 411 homework 6 A*
 // TODO:
 
 
-// maybe optimize it to make it less memory and nodes?
-// some puzzles take more than 30 second to solve but i have a time that times out after 30 seconds hmmmm
-//
-
+// global vector to hold all the heruistics that go over the threshold
+std::vector<int> low_values;
 
 
 // my own test case:
@@ -57,29 +55,56 @@ void create_states(  int goal[BOARD_ROW][BOARD_COL], int starting_state_board[BO
 
 }
 
-//===============================================================================================================================
-// A* to find the puzzle node
-// will generate puzzles to keep looking for the goal state
-// uses misplaces number of tiles
+//============================================================================================================================
 
-// look inside Puzzle_node.cpp to find how i did misplace tiles and manhatten distance
-Puzzle_node *a_star(  Puzzle_node *initial_state, const std::vector<std::string> &directions, int &nodes_made, std::string flag) {
+// iterative deepening depth firt search
+// we will use a iterative DFS to make it simple
+
+Puzzle_node* ID_a_star ( Puzzle_node* initial_state, const std::vector<std::string> &directions, int &nodes_made, int max_value, std::string flag) {
+
+    // clear vector of heruistics
+    low_values.clear();
+
+    // create a stack to help us perform the dfs
+    std::stack <Puzzle_node*> frontier;
+
+    // create a vector to keep track of already same state
+    std::vector<std::string> visisted_state;
+
+    // keep track of visisted or not
+    bool vis = false;
 
     clock_t tStart = clock(); // start the clock for 30 seconds
 
-    // list to hold the new states then calculate misplace tiltes
-    std::vector<Puzzle_node*> mis_list;
+    // add the intial state to the stack
+    frontier.push(initial_state);
+    // keep going until the stack is empty
+    while (!frontier.empty()) {
 
-    // add itital state
-    mis_list.push_back(initial_state);
+        vis = false; // rest to false
 
-    // perform the bfs algo
-    while (true) {
+        // grab the top  element and pop it off
+        Puzzle_node* p1 = frontier.top();
+        frontier.pop();
 
-        Puzzle_node *p1 = mis_list[0]; // grab first element
-        mis_list.erase(mis_list.begin()); // pop it off
+        // get the string representation of the board
+        std::string c_state = p1->convert_to_string();
+        // check if we already reached this state, if we did then skip it other else store that state
+        for (std::string s : visisted_state) {
+            if (s == c_state ) {
+                vis = true;
+            }
+        }
 
-        // check if the puzzle reached goal state
+        // found a matching state so we just skip it and move on
+        if (vis == true) {
+            continue;
+        }
+        else { // store the board
+            visisted_state.push_back(c_state);
+        }
+
+        // check if the goal state is reached
         if(p1->reached_goal_state()) {
             return p1;
         }
@@ -91,26 +116,31 @@ Puzzle_node *a_star(  Puzzle_node *initial_state, const std::vector<std::string>
             return dummy;
         }
 
-        // loop through directions vector to make moves on the board
+        // check if the cutoff for heruistics is over.
+        // if it is, we ignore it and then store that heristics value
+        if (p1->heruistics > max_value) {
+            // if it is bigger, store it in vector then find min of that vec to set new max value
+            low_values.push_back(p1->heruistics);
+            continue;
+        }
+
+        // loop through the direcion list
         for (int i=0; i < directions.size(); ++i) {
 
-            // check if that piece can go in that direction
+            // check for valid direction
             if (p1->valid_direction(directions[i])) {
 
-                // make new puzzle based on going into that direction
-                Puzzle_node *p2 = new Puzzle_node(*p1);
-                nodes_made++;
+                //make new puzzle..by coping it first
+                Puzzle_node* p2 = new Puzzle_node(*p1);
                 //std::cout << p2->depth << std::endl;
-
-                // store the parent node from p2
-                p2->parent = p1;
-
-                // make the move
+                // make move
                 p2->move_direction(directions[i]);
+                nodes_made++;
+
+                p2->parent = p1;
 
                 // check if were doing misplace tiles OR manhatten distance
                 if (flag == "manhatten") {
-                    //std::cout << "manhattan being called" << std::endl;
                     p2->calculate_manhattan_distance(); // calculate manhatten distance as well heruistics
                 }
                 else if (flag == "misplaceTILES") {
@@ -118,33 +148,19 @@ Puzzle_node *a_star(  Puzzle_node *initial_state, const std::vector<std::string>
                     p2->calculate_misplace_tiles();  // calculate misplace tiltes as well as the heruistics
                 }
 
-                // add it to vector of lists
-                mis_list.push_back(p2);
-            }
-        } // for
+                frontier.push(p2);
 
-        // now sort the list based on heristics, we want the lowest heristics to be the top
-        std::sort(mis_list.begin(), mis_list.end(), my_compare);
+            } // if valid dir
+
+        }// for loop
 
     } // while
 
-    Puzzle_node *no_solution = new Puzzle_node (10);
-    return no_solution; // empty?
+    return nullptr;
 
-}
+} // function
 
-//=========================================================================================================================
-// bool compare function to pass into std::sort
-// we want the lowest heuristics to come first
-bool my_compare( const Puzzle_node* a, const Puzzle_node *b) {
 
-    // if left side is bigger than right side, swap, false means we want it to swap
-    // if (a->heruistics > b->heruistics) {
-    //     return false;
-    // }
-    return (a->heruistics < b->heruistics);
-}
-//============================================================================================================================
 
 // intilize the static variable in puzzle node class
 // not used in a*
@@ -186,7 +202,15 @@ int main()
     // create a puzzle object
     Puzzle_node *start = new Puzzle_node(starting_state_board);
 
-    Puzzle_node *solution = a_star(start,directions,nodes, "misplaceTILES"); // run a* misplace tiles
+    int start_depth = 0;
+    Puzzle_node *solution = ID_a_star(start,directions,nodes, start_depth, "misplaceTILES"); // run iddfs
+
+    // continue to loop depth by depth
+    while (!solution) {
+        auto min_value = *std::min_element(low_values.begin(),low_values.end()); // grab the lowest value that we found
+        start_depth = min_value;
+        solution = ID_a_star(start,directions,nodes, start_depth, "misplaceTILES");
+    }
 
     std::cout << std::endl << "Number of misplaced tiles" << std::endl;
 
@@ -209,7 +233,17 @@ int main()
     //=========================================================== manhatten stuff
     int nodes_created = 1;
     Puzzle_node* start1 = new Puzzle_node(starting_state_board);
-    Puzzle_node* manhattan_sol = a_star(start1,directions,nodes_created, "manhatten");
+
+    //Puzzle_node* manhattan_sol = ID_a_star(start1,directions,nodes_created, "manhatten");
+    int start_depth1 = 0;
+    Puzzle_node *manhattan_sol = ID_a_star(start1,directions,nodes_created, start_depth1, "manhatten"); // run iddfs
+
+    // continue to loop depth by depth
+    while (!manhattan_sol) {
+        auto min_value1 = *std::min_element(low_values.begin(),low_values.end()); // grab the lowest value that we found
+        start_depth1 = min_value1;
+        manhattan_sol = ID_a_star(start1,directions,nodes_created, start_depth1, "manhatten");
+    }
 
     std::cout << std::endl << "Manhattan Distance" << std::endl;
 
